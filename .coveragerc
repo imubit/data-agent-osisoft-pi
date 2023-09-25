@@ -1,7 +1,7 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-source = daconnect_osisoft_pi
+source = data_agent_osisoft_pi
 # omit = bad_file.py
 
 [paths]

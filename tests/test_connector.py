@@ -1,7 +1,7 @@
 import numpy as np
 from conftest import TEST_SERVER_NAME, TEST_SERVER_VERSION
 
-from daconnect_osisoft_pi.connector import OsisoftPiConnector
+from data_agent_osisoft_pi.connector import OsisoftPiConnector
 
 
 def test_list_registered_targets():

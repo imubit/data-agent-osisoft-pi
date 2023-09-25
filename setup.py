@@ -1,5 +1,5 @@
 """
-    Setup file for daconnect-osisoft-pi.
+    Setup file for data-agent-osisoft-pi.
     Use setup.cfg to configure your project.
 
     This file was generated with PyScaffold 4.5.
