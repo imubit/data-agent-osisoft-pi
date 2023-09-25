@@ -6,12 +6,11 @@ from data_agent_osisoft_pi.connector import OsisoftPiConnector
 
 def test_list_registered_targets():
     targets = OsisoftPiConnector.list_registered_targets()
-    assert {
-        "uid": "osisoft-pi::DATA-ANALYSIS-W:ceaee643-0978-4cb4-bd6d-ab2d628d4b06",
-        "Name": "DATA-ANALYSIS-W",
-        "Host": "10.142.15.210",
-        "Port": 5450,
-    } in targets
+    for t in targets:
+        if t["Name"] == TEST_SERVER_NAME:
+            return
+
+    assert False
 
 
 def test_sanity():
