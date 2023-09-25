@@ -297,7 +297,7 @@ class OsisoftPiConnector(AbstractConnector):
 
     @active_connection
     def read_tag_values(self, tags: list):
-        pass
+        raise RuntimeError("unsupported")
 
     @active_connection
     def read_tag_values_period(
@@ -382,6 +382,9 @@ class OsisoftPiConnector(AbstractConnector):
                             page_time_range, time_span, "", False
                         )
 
+                        if records.Count == 0:
+                            break
+
                         formatted_data = {
                             timestamp_to_datetime(val.Timestamp.UtcTime): val.Value
                             for val in records
@@ -394,9 +397,6 @@ class OsisoftPiConnector(AbstractConnector):
                                 dtype=None if records else np.float32,
                             )
                         )
-
-                        if records.Count == 0:
-                            break
 
                         next_start_time = (
                             records[records.Count - 1].Timestamp + time_span
@@ -422,6 +422,9 @@ class OsisoftPiConnector(AbstractConnector):
                             page_time_range, boundary, "", False, self._page_size
                         )
 
+                        if records.Count == 0:
+                            break
+
                         formatted_data = {
                             timestamp_to_datetime(val.Timestamp.UtcTime): val.Value
                             for val in records
@@ -435,15 +438,15 @@ class OsisoftPiConnector(AbstractConnector):
                             )
                         )
 
-                        if records.Count == 0:
-                            break
-
                         next_start_time = records[
                             records.Count - 1
                         ].Timestamp + AFTimeSpan.Parse("1 second")
 
-                if page_series:
-                    tag_series.append(pd.concat(page_series, axis=0, sort=True))
+                tag_series.append(
+                    pd.concat(page_series, axis=0, sort=True)
+                    if page_series
+                    else pd.Series([], name=pt.Name, dtype=np.float32)
+                )
 
             if not tag_series:
                 return None
@@ -461,4 +464,4 @@ class OsisoftPiConnector(AbstractConnector):
 
     @active_connection
     def write_tag_values(self, tags: dict, wait_for_result: bool = True, **kwargs):
-        raise Exception("unsupported")
+        raise RuntimeError("unsupported")

@@ -1,5 +1,5 @@
 """
-    Dummy conftest.py for daconnect_osisoft_pi.
+    Dummy conftest.py for data_agent_osisoft_pi.
 
     If you don't know what this is for, just leave it empty.
     Read more about conftest.py under:
@@ -9,7 +9,7 @@
 
 import pytest
 
-from daconnect_osisoft_pi.connector import OsisoftPiConnector
+from data_agent_osisoft_pi.connector import OsisoftPiConnector
 
 # TEST_SERVER_NAME = 'DATA-ANALYSIS-W'
 # TEST_SERVER_VERSION = '3.4.395.80'

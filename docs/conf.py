@@ -34,7 +34,7 @@ except ImportError:
     from sphinx import apidoc
 
 output_dir = os.path.join(__location__, "api")
-module_dir = os.path.join(__location__, "../src/daconnect_osisoft_pi")
+module_dir = os.path.join(__location__, "../src/data_agent_osisoft_pi")
 try:
     shutil.rmtree(output_dir)
 except FileNotFoundError:
@@ -105,7 +105,7 @@ source_suffix = [".rst", ".md"]
 master_doc = "index"
 
 # General information about the project.
-project = "daconnect-osisoft-pi"
+project = "data-agent-osisoft-pi"
 copyright = "2023, Meir Tseitlin"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -117,7 +117,7 @@ copyright = "2023, Meir Tseitlin"
 # If you don’t need the separation provided between version and release,
 # just set them both to the same value.
 try:
-    from daconnect_osisoft_pi import __version__ as version
+    from data_agent_osisoft_pi import __version__ as version
 except ImportError:
     version = ""
 
@@ -247,7 +247,7 @@ html_static_path = ["_static"]
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "daconnect-osisoft-pi-doc"
+htmlhelp_basename = "data-agent-osisoft-pi-doc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -264,7 +264,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "user_guide.tex", "daconnect-osisoft-pi Documentation", "Meir Tseitlin", "manual")
+    ("index", "user_guide.tex", "data-agent-osisoft-pi Documentation", "Meir Tseitlin", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
