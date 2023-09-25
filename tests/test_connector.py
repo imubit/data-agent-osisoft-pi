@@ -123,6 +123,13 @@ def test_read_tag_values_period(target_conn):
     )
     assert list(df.columns) == ["SINUSOID", "SINUSOIDU"]
 
+    df = target_conn.read_tag_values_period(
+        ["sinusoid", "sinusoidu"],
+        first_timestamp="*-200h",
+        last_timestamp="*-100h",
+    )
+    assert list(df.columns) == ["SINUSOID", "SINUSOIDU"]
+
 
 def test_read_tag_attributes(target_conn):
     res = target_conn.read_tag_attributes(

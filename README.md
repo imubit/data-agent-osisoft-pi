@@ -14,10 +14,10 @@
 Example of using [Data Agent](https://github.com/imubit/data-agent) CLI to access PI tags
 
 ```commandline
-imagent exec create_connection --conn_name=pi --conn_type=osisoft-pi --enabled=True --server_name=DATA-ANALYSIS-W
-imagent exec list_connections
-imagent exec connection_info --conn_name=pi
-imagent exec list_tags --conn_name=pi
-imagent exec read_tag_values_period --conn_name=pi --tags="['sinusoid', 'sinusoidu']" --first_timestamp=*-100h --last_timestamp=*
-imagent exec copy_period --src_conn=pi --tags="['SINUSOID', 'sinusoidu']" --dest_conn=csv --dest_group='sinus.csv' --first_timestamp=*-100h --last_timestamp=*
+dagent exec create_connection --conn_name=pi --conn_type=osisoft-pi --enabled=True --server_name=DATA-ANALYSIS-W
+dagent exec list_connections
+dagent exec connection_info --conn_name=pi
+dagent exec list_tags --conn_name=pi
+dagent exec read_tag_values_period --conn_name=pi --tags="['sinusoid', 'sinusoidu']" --first_timestamp=*-100h --last_timestamp=*
+dagent exec copy_period --src_conn=pi --tags="['SINUSOID', 'sinusoidu']" --dest_conn=csv --dest_group='sinus.csv' --first_timestamp=*-100h --last_timestamp=*
 ```
