@@ -1,6 +1,5 @@
 
 [![Built Status](https://api.cirrus-ci.com/github/imubit/data-agent-osisoft-pi.svg?branch=main)](https://cirrus-ci.com/github/imubit/data-agent-osisoft-pi)
-[![Coveralls](https://img.shields.io/coveralls/github/imubit/data-agent-osisoft-pi/main.svg)](https://coveralls.io/r/imubit/data-agent-osisoft-pi)
 [![PyPI-Server](https://img.shields.io/pypi/v/data-agent-osisoft-pi.svg)](https://pypi.org/project/data-agent-osisoft-pi/)
 [![Project generated with PyScaffold](https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold)](https://pyscaffold.org/)
 
