@@ -13,7 +13,7 @@
 Example of using [Data Agent](https://github.com/imubit/data-agent) CLI to access PI tags
 
 ```commandline
-dagent exec create_connection --conn_name=pi --conn_type=osisoft-pi --enabled=True --server_name=DATA-ANALYSIS-W
+dagent exec create_connection --conn_name=pi --conn_type=osisoft-pi --enabled=True --server_name=DATA-SERVER
 dagent exec list_connections
 dagent exec connection_info --conn_name=pi
 dagent exec list_tags --conn_name=pi
