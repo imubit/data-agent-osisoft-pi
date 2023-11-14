@@ -127,7 +127,7 @@ class OsisoftPiConnector(AbstractConnector):
         self._server = None
         self._server_name = server_name
         self._page_size = (
-            kwargs["page_size"] if "page_size" in kwargs else DEFAULT_PAGE_SIZE
+            int(kwargs["page_size"]) if "page_size" in kwargs else DEFAULT_PAGE_SIZE
         )
 
     @staticmethod
