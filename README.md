@@ -20,3 +20,14 @@ dagent exec list_tags --conn_name=pi
 dagent exec read_tag_values_period --conn_name=pi --tags="['sinusoid', 'sinusoidu']" --first_timestamp=*-100h --last_timestamp=*
 dagent exec copy_period --src_conn=pi --tags="['SINUSOID', 'sinusoidu']" --dest_conn=csv --dest_group='sinus.csv' --first_timestamp=*-100h --last_timestamp=*
 ```
+
+
+## Troubleshooting
+
+### OSIsoft.AF.PI.PITimeoutException when reading historical data
+
+Increase the SDK data access timeout settings on the client machine. There are two timeouts for the SDK, a connection timeout and a data access timeout. The connection timeout default is 10 seconds.  The data access timeout is 60 seconds. Data access timeouts are the most likely cause of the error.
+* Launch AboutPI-SDK.exe.
+* Navigate to the Connections tab.
+* Select the PI Data Archive in question.
+* Increase the Data Access Timeout and Connection Timeout to 120 seconds or more.
