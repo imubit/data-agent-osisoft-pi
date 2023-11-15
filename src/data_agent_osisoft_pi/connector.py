@@ -87,8 +87,6 @@ MAP_PITYPE_2_NUMPY = {
 
 MAP_TIME_FREQUENCY_TO_PI = {"raw data": None}
 
-DEFAULT_PAGE_SIZE = 200000
-
 
 def cast2python(val):
     if str(type(val)) == "<class 'System.DateTime'>":
@@ -121,13 +119,17 @@ class OsisoftPiConnector(AbstractConnector):
         ("compressing", {"Type": "int", "Name": "Compression"}),
         ("changer", {"Type": "str", "Name": "Modified By"}),
     ]
+    DEFAULT_PAGE_SIZE = 200000
+    ABSOLUTE_MAX_VALUES_TO_READ = 1000000000
 
     def __init__(self, conn_name="pi_client", server_name="default", **kwargs):
         super(OsisoftPiConnector, self).__init__(conn_name)
         self._server = None
         self._server_name = server_name
         self._page_size = (
-            int(kwargs["page_size"]) if "page_size" in kwargs else DEFAULT_PAGE_SIZE
+            int(kwargs["page_size"])
+            if "page_size" in kwargs
+            else OsisoftPiConnector.DEFAULT_PAGE_SIZE
         )
 
     @staticmethod
@@ -146,7 +148,7 @@ class OsisoftPiConnector(AbstractConnector):
                 "name": "Data Read Page Size",
                 "type": "list",
                 "values": ["200000", "20000", "10000", "5000"],
-                "default_value": DEFAULT_PAGE_SIZE,
+                "default_value": OsisoftPiConnector.DEFAULT_PAGE_SIZE,
                 "optional": False,
             },
         }
@@ -189,6 +191,7 @@ class OsisoftPiConnector(AbstractConnector):
             )
 
         try:
+            # https://docs.aveva.com/bundle/af-sdk/page/html/M_OSIsoft_AF_PI_PIServer_Connect.htm
             self._server.Connect(force=True)
 
             log.debug(f"Connected to {self._server_name}, page_size={self._page_size}")
@@ -313,6 +316,7 @@ class OsisoftPiConnector(AbstractConnector):
         first_timestamp=None,
         last_timestamp=None,
         time_frequency=None,
+        max_results=None,
         result_format="dataframe",
         progress_callback=None,
     ):
@@ -324,6 +328,8 @@ class OsisoftPiConnector(AbstractConnector):
             first_timestamp = first_timestamp.strftime("%Y/%m/%d %H:%M:%S")
         if isinstance(last_timestamp, datetime):
             last_timestamp = last_timestamp.strftime("%Y/%m/%d %H:%M:%S")
+
+        total_values_to_read = max_results or self.ABSOLUTE_MAX_VALUES_TO_READ
 
         assert result_format in ["dataframe", "series", "tuple"]
 
@@ -364,20 +370,18 @@ class OsisoftPiConnector(AbstractConnector):
                     time_span = AFTimeSpan.Parse(freq)
 
                     next_start_time = start_time
-                    next_end_time = (
-                        time_span.Multiply(next_start_time, self._page_size)
-                        if time_span.Multiply(next_start_time, self._page_size)
-                        < time_range.EndTime
-                        else time_range.EndTime
-                    )
 
                     # print('starting')
-                    # print(f'range: {time_range}  next_start_time={next_start_time}, next_end_time={next_end_time}')
 
-                    while next_start_time < time_range.EndTime:
+                    while (
+                        next_start_time < time_range.EndTime
+                        and total_values_to_read > 0
+                    ):
+                        values_to_read = min(self._page_size, total_values_to_read)
+
                         next_end_time = (
-                            time_span.Multiply(next_start_time, self._page_size)
-                            if time_span.Multiply(next_start_time, self._page_size)
+                            time_span.Multiply(next_start_time, values_to_read - 1)
+                            if time_span.Multiply(next_start_time, values_to_read - 1)
                             < time_range.EndTime
                             else time_range.EndTime
                         )
@@ -391,6 +395,8 @@ class OsisoftPiConnector(AbstractConnector):
 
                         if records.Count == 0:
                             break
+
+                        total_values_to_read -= records.Count
 
                         formatted_data = {
                             timestamp_to_datetime(val.Timestamp.UtcTime): val.Value
@@ -419,18 +425,25 @@ class OsisoftPiConnector(AbstractConnector):
                     # print('starting')
                     # print(f'range: {time_range}            next_start_time={next_start_time}')
 
-                    while next_start_time < time_range.EndTime:
+                    while (
+                        next_start_time < time_range.EndTime
+                        and total_values_to_read > 0
+                    ):
                         page_time_range = AFTimeRange(
                             next_start_time, time_range.EndTime
                         )
 
+                        values_to_read = min(self._page_size, total_values_to_read)
+
                         # https://docs.aveva.com/bundle/af-sdk/page/html/M_OSIsoft_AF_PI_PIPoint_RecordedValues.htm
                         records = pt.RecordedValues(
-                            page_time_range, boundary, "", False, self._page_size
+                            page_time_range, boundary, "", False, values_to_read
                         )
 
                         if records.Count == 0:
                             break
+
+                        total_values_to_read -= records.Count
 
                         formatted_data = {
                             timestamp_to_datetime(val.Timestamp.UtcTime): val.Value

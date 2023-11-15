@@ -76,7 +76,18 @@ def test_read_tag_values_period_interpolated(target_conn):
         time_frequency="1 minute",
     )
 
-    assert len(df) == 6001
+    assert len(df) == 6000
+    assert list(df.columns) == ["SINUSOIDU"]
+
+    df = target_conn.read_tag_values_period(
+        ["sinusoidu"],
+        first_timestamp="*-100h",
+        last_timestamp="*",
+        time_frequency="1 minute",
+        max_results=10,
+    )
+
+    assert len(df) == 10
     assert list(df.columns) == ["SINUSOIDU"]
 
     df = target_conn.read_tag_values_period(
@@ -96,23 +107,11 @@ def test_read_tag_values_period_interpolated(target_conn):
         time_frequency="3 minutes",
     )
 
-    assert len(df) == 2001
+    assert len(df) == 2000
     assert list(df.columns) == ["SINUSOID", "SINUSOIDU"]
 
 
-def test_read_tag_values_period(target_conn):
-    # target_conn.read_tag_values(["sinusoid", "sinusoidu", "cdt158", "cdm158"],
-    #                             first_timestamp='2022/09/02 00:00:05',
-    #                             last_timestamp='2022/09/10 00:00:10',
-    #                             )
-
-    # df = target_conn.read_tag_values_period(["sinusoid", "sinusoidu"],
-    #                                         first_timestamp='*-100h',
-    #                                         last_timestamp='*',
-    #                                         )
-    # assert 72 > len(df) > 10
-    # assert list(df.columns) == ['SINUSOID', 'SINUSOIDU']
-
+def test_read_tag_values_period_recorded(target_conn):
     df = target_conn.read_tag_values_period(
         ["sinusoid", "sinusoidu"],
         # first_timestamp='*-100h',
@@ -128,6 +127,24 @@ def test_read_tag_values_period(target_conn):
         last_timestamp="*-100h",
     )
     assert list(df.columns) == ["SINUSOID", "SINUSOIDU"]
+
+    df = target_conn.read_tag_values_period(
+        ["sinusoid", "sinusoidu"],
+        first_timestamp="2020-04-15 12:00:00",
+        last_timestamp="2020-05-16 12:00:00",
+        max_results=10,
+    )
+    assert list(df.columns) == ["SINUSOID", "SINUSOIDU"]
+    assert len(df) == 10
+
+    df = target_conn.read_tag_values_period(
+        ["sinusoid", "sinusoidu"],
+        first_timestamp="2020-04-15 12:00:00",
+        last_timestamp="2020-12-16 12:00:00",
+        max_results=2000,
+    )
+    assert list(df.columns) == ["SINUSOID", "SINUSOIDU"]
+    assert len(df) == 2000
 
 
 def test_read_tag_attributes(target_conn):
