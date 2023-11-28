@@ -147,7 +147,7 @@ class OsisoftPiConnector(AbstractConnector):
             "page_size": {
                 "name": "Data Read Page Size",
                 "type": "list",
-                "values": ["200000", "20000", "10000", "5000"],
+                "values": ["200000", "20000", "10000", "5000", "1000"],
                 "default_value": OsisoftPiConnector.DEFAULT_PAGE_SIZE,
                 "optional": False,
             },
