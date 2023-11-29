@@ -31,7 +31,12 @@ clr.AddReference("OSIsoft.AFSDK")
 # from OSIsoft.AF.Asset import * # noqa: E402
 # from OSIsoft.AF.UnitsOfMeasure import * # noqa: E402
 from OSIsoft.AF.Data import AFBoundaryType  # noqa: E402
-from OSIsoft.AF.PI import PIPoint, PIPointType, PIServers  # noqa: E402
+from OSIsoft.AF.PI import (  # noqa: E402
+    PIPoint,
+    PIPointType,
+    PIServers,
+    PITimeoutException,
+)
 from OSIsoft.AF.Time import AFTime, AFTimeRange, AFTimeSpan  # noqa: E402
 
 # from System import TimeSpan # noqa: E402
@@ -389,9 +394,17 @@ class OsisoftPiConnector(AbstractConnector):
                         page_time_range = AFTimeRange(next_start_time, next_end_time)
 
                         # https://docs.aveva.com/bundle/af-sdk/page/html/M_OSIsoft_AF_PI_PIPoint_InterpolatedValues.htm
-                        records = pt.InterpolatedValues(
-                            page_time_range, time_span, "", False
-                        )
+                        try:
+                            records = pt.InterpolatedValues(
+                                page_time_range, time_span, "", False
+                            )
+                        except PITimeoutException as e:
+                            log.warn(
+                                f"Retrying after pt.InterpolatedValues timeout: {e}"
+                            )
+                            records = pt.InterpolatedValues(
+                                page_time_range, time_span, "", False
+                            )
 
                         if records.Count == 0:
                             break
@@ -436,9 +449,15 @@ class OsisoftPiConnector(AbstractConnector):
                         values_to_read = min(self._page_size, total_values_to_read)
 
                         # https://docs.aveva.com/bundle/af-sdk/page/html/M_OSIsoft_AF_PI_PIPoint_RecordedValues.htm
-                        records = pt.RecordedValues(
-                            page_time_range, boundary, "", False, values_to_read
-                        )
+                        try:
+                            records = pt.RecordedValues(
+                                page_time_range, boundary, "", False, values_to_read
+                            )
+                        except PITimeoutException as e:
+                            log.warn(f"Retrying after pt.RecordedValues timeout: {e}")
+                            records = pt.RecordedValues(
+                                page_time_range, boundary, "", False, values_to_read
+                            )
 
                         if records.Count == 0:
                             break
