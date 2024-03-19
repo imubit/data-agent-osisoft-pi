@@ -90,6 +90,16 @@ MAP_PITYPE_2_NUMPY = {
     PIPointType.Blob: object,
 }
 
+MAP_PIATTRIBUTE_2_STANDARD = {
+    "tag": "Name",
+    "pointtype": "Type",
+    "descriptor": "Description",
+    "engunits": "EngUnits",
+    "instrumenttag": "Path",
+}
+
+MAP_STANDARD_ATTR_TO_PI = {v: k for k, v in MAP_PIATTRIBUTE_2_STANDARD.items()}
+
 MAP_TIME_FREQUENCY_TO_PI = {"raw data": None}
 
 
@@ -112,10 +122,10 @@ class OsisoftPiConnector(AbstractConnector):
         SupportedOperation.READ_TAG_META,
     ]
     DEFAULT_ATTRIBUTES = [
-        ("tag", {"Type": "str", "Name": "Tag Name"}),
-        ("engunits", {"Type": "str", "Name": "Units"}),
+        ("Name", {"Type": "str", "Name": "Tag Name"}),
+        ("EngUnits", {"Type": "str", "Name": "Units"}),
         ("typicalvalue", {"Type": "str", "Name": "Typical Value"}),
-        ("descriptor", {"Type": "str", "Name": "Description"}),
+        ("description", {"Type": "str", "Name": "Description"}),
         ("pointsource", {"Type": "str", "Name": "Point Source"}),
         # ('pointtype', {
         #     'Type': str,
@@ -267,10 +277,16 @@ class OsisoftPiConnector(AbstractConnector):
         if include_attributes:
             res = {}
             for ind, pt in zip(range(max_results), pts):
-                res[pt.Name] = {
-                    a: cast2python(pt.GetAttribute(a))
-                    for a in pt.FindAttributeNames(None)
-                }
+                res[pt.Name] = {}
+                for a in pt.FindAttributeNames(None):
+                    # Add standard attributes
+                    if a in MAP_PIATTRIBUTE_2_STANDARD:
+                        res[pt.Name][MAP_PIATTRIBUTE_2_STANDARD[a]] = cast2python(
+                            pt.GetAttribute(a)
+                        )
+
+                    res[pt.Name][a] = cast2python(pt.GetAttribute(a))
+
                 res[pt.Name]["HasChildren"] = False
         else:
             res = {
@@ -282,31 +298,54 @@ class OsisoftPiConnector(AbstractConnector):
 
     @active_connection
     def read_tag_attributes(self, tags: list, attributes: list = None):
+        attr_list_provided = isinstance(attributes, list) and len(attributes) > 0
+
         names = tags
         if isinstance(tags, list):
             names = List[str]()
             for tag in tags:
                 names.Add(tag)
 
-        if attributes is not None:
+        if attr_list_provided:
             dotnet_attributes = List[str]()
-            for attr in attributes:
-                dotnet_attributes.Add(attr)
+            for a in attributes:
+                dotnet_attributes.Add(
+                    MAP_STANDARD_ATTR_TO_PI[a]
+                    if a in MAP_STANDARD_ATTR_TO_PI.keys()
+                    else a
+                )
 
         pts = PIPoint.FindPIPoints(
             self._server,
             names,
-            dotnet_attributes if isinstance(attributes, list) else None,
+            dotnet_attributes if attr_list_provided else None,
         )
 
         res = {}
         for pt in pts:
             attributes = (
-                attributes
-                if isinstance(attributes, list)
-                else pt.FindAttributeNames(None)
+                attributes if attr_list_provided else pt.FindAttributeNames(None)
             )
-            res[pt.Name] = {a: cast2python(pt.GetAttribute(a)) for a in attributes}
+
+            res[pt.Name] = {
+                a: cast2python(
+                    pt.GetAttribute(
+                        MAP_STANDARD_ATTR_TO_PI[a]
+                        if a in MAP_STANDARD_ATTR_TO_PI.keys()
+                        else a
+                    )
+                )
+                for a in attributes
+            }
+
+            # Add standard attributes
+            if not attr_list_provided:
+                for a in MAP_STANDARD_ATTR_TO_PI.keys():
+                    res[pt.Name][a] = (
+                        res[pt.Name][MAP_STANDARD_ATTR_TO_PI[a]]
+                        if MAP_STANDARD_ATTR_TO_PI[a] in res[pt.Name]
+                        else None
+                    )
 
         return res
 
@@ -376,8 +415,6 @@ class OsisoftPiConnector(AbstractConnector):
 
                     next_start_time = start_time
 
-                    # print('starting')
-
                     while (
                         next_start_time < time_range.EndTime
                         and total_values_to_read > 0
@@ -434,9 +471,6 @@ class OsisoftPiConnector(AbstractConnector):
                     # https://docs.aveva.com/bundle/af-sdk/page/html/T_OSIsoft_AF_Data_AFBoundaryType.htm
                     boundary = AFBoundaryType.Inside
                     next_start_time = start_time
-
-                    # print('starting')
-                    # print(f'range: {time_range}            next_start_time={next_start_time}')
 
                     while (
                         next_start_time < time_range.EndTime

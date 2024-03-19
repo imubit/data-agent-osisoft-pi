@@ -47,6 +47,9 @@ def test_list_tags_filter(target_conn):
 
     tags = target_conn.list_tags(filter="SINUSOID*", include_attributes=True)
     assert tags["SINUSOID"]["pointtype"] == np.float32
+    assert tags["SINUSOID"]["Name"] == "SINUSOID"
+    assert tags["SINUSOID"]["Type"] == np.float32
+    assert tags["SINUSOID"]["Description"] == "12 Hour Sine Wave"
 
 
 def test_list_tags_list(target_conn):
@@ -148,11 +151,24 @@ def test_read_tag_values_period_recorded(target_conn):
 
 
 def test_read_tag_attributes(target_conn):
-    res = target_conn.read_tag_attributes(
-        ["sinusoid", "sinusoidu"], attributes=["tag", "pointtype"]
-    )
+    # Test PI attribute
+    res = target_conn.read_tag_attributes(["sinusoid", "sinusoidu"])
+    assert res["SINUSOID"]["descriptor"] == "12 Hour Sine Wave"
+    assert res["SINUSOID"]["Description"] == "12 Hour Sine Wave"
+    assert res["SINUSOID"]["Path"] == ""
 
+    # Test standard attribute
+    res = target_conn.read_tag_attributes(
+        ["sinusoid", "sinusoidu"], attributes=["Description", "descriptor", "Path"]
+    )
+    assert res["SINUSOID"]["Description"] == "12 Hour Sine Wave"
+    assert res["SINUSOID"]["descriptor"] == "12 Hour Sine Wave"
+    assert res["SINUSOID"]["Path"] == ""
+
+    res = target_conn.read_tag_attributes(
+        ["sinusoid", "sinusoidu"], attributes=["tag", "pointtype", "Name"]
+    )
     assert res == {
-        "SINUSOID": {"tag": "SINUSOID", "pointtype": np.float32},
-        "SINUSOIDU": {"tag": "SINUSOIDU", "pointtype": np.float32},
+        "SINUSOID": {"tag": "SINUSOID", "pointtype": np.float32, "Name": "SINUSOID"},
+        "SINUSOIDU": {"tag": "SINUSOIDU", "pointtype": np.float32, "Name": "SINUSOIDU"},
     }
