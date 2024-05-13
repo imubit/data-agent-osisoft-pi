@@ -7,6 +7,7 @@
 # https://github.com/nielsvth/PIconnect/network
 
 import logging
+import os
 import sys
 from datetime import datetime
 from typing import Union
@@ -23,26 +24,29 @@ from data_agent.abstract_connector import (
 # from data_agent.groups_aware_connector import GroupsAwareConnector
 from data_agent.exceptions import TargetConnectionError
 
-sys.path.append(r"C:\Program Files (x86)\PIPC\AF\PublicAssemblies\4.0")
-clr.AddReference("OSIsoft.AFSDK")
+AF_ASSEMBLY_PATH = r"C:\Program Files (x86)\PIPC\AF\PublicAssemblies\4.0"
 
+SDK_INSTALLED = os.path.exists(AF_ASSEMBLY_PATH)
+if SDK_INSTALLED:
+    sys.path.append(AF_ASSEMBLY_PATH)
+    clr.AddReference("OSIsoft.AFSDK")
 
-# from OSIsoft.AF import * # noqa: E402
-# from OSIsoft.AF.Asset import * # noqa: E402
-# from OSIsoft.AF.UnitsOfMeasure import * # noqa: E402
-from OSIsoft.AF.Data import AFBoundaryType  # noqa: E402
-from OSIsoft.AF.PI import (  # noqa: E402
-    PIPoint,
-    PIPointType,
-    PIServers,
-    PITimeoutException,
-)
-from OSIsoft.AF.Time import AFTime, AFTimeRange, AFTimeSpan  # noqa: E402
+    # from OSIsoft.AF import * # noqa: E402
+    # from OSIsoft.AF.Asset import * # noqa: E402
+    # from OSIsoft.AF.UnitsOfMeasure import * # noqa: E402
+    from OSIsoft.AF.Data import AFBoundaryType  # noqa: E402
+    from OSIsoft.AF.PI import (  # noqa: E402
+        PIPoint,
+        PIPointType,
+        PIServers,
+        PITimeoutException,
+    )
+    from OSIsoft.AF.Time import AFTime, AFTimeRange, AFTimeSpan  # noqa: E402
 
-# from System import TimeSpan # noqa: E402
-from System.Collections.Generic import List  # noqa: E402
+    # from System import TimeSpan # noqa: E402
+    from System.Collections.Generic import List  # noqa: E402
 
-# from System.Net import NetworkCredential # noqa: E402
+    # from System.Net import NetworkCredential # noqa: E402
 
 log = logging.getLogger(f"ia_plugin.{__name__}")
 
@@ -77,19 +81,6 @@ def timestamp_to_datetime(timestamp):
     )
 
 
-MAP_PITYPE_2_NUMPY = {
-    PIPointType.Null: None,
-    PIPointType.Int16: np.int16,
-    PIPointType.Int32: np.int32,
-    PIPointType.Float16: np.float16,
-    PIPointType.Float32: np.float32,
-    PIPointType.Float64: np.float64,
-    PIPointType.Digital: bool,
-    PIPointType.Timestamp: np.datetime64,
-    PIPointType.String: str,
-    PIPointType.Blob: object,
-}
-
 MAP_PIATTRIBUTE_2_STANDARD = {
     "tag": "Name",
     "pointtype": "Type",
@@ -104,6 +95,19 @@ MAP_TIME_FREQUENCY_TO_PI = {"raw data": None}
 
 
 def cast2python(val):
+    MAP_PITYPE_2_NUMPY = {
+        PIPointType.Null: None,
+        PIPointType.Int16: np.int16,
+        PIPointType.Int32: np.int32,
+        PIPointType.Float16: np.float16,
+        PIPointType.Float32: np.float32,
+        PIPointType.Float64: np.float64,
+        PIPointType.Digital: bool,
+        PIPointType.Timestamp: np.datetime64,
+        PIPointType.String: str,
+        PIPointType.Blob: object,
+    }
+
     if str(type(val)) == "<class 'System.DateTime'>":
         return timestamp_to_datetime(val)
 
@@ -137,15 +141,9 @@ class OsisoftPiConnector(AbstractConnector):
     DEFAULT_PAGE_SIZE = 200000
     ABSOLUTE_MAX_VALUES_TO_READ = 1000000000
 
-    def __init__(self, conn_name="pi_client", server_name="default", **kwargs):
-        super(OsisoftPiConnector, self).__init__(conn_name)
-        self._server = None
-        self._server_name = server_name
-        self._page_size = (
-            int(kwargs["page_size"])
-            if "page_size" in kwargs
-            else OsisoftPiConnector.DEFAULT_PAGE_SIZE
-        )
+    @staticmethod
+    def plugin_supported():
+        return SDK_INSTALLED
 
     @staticmethod
     def list_connection_fields():
@@ -186,8 +184,18 @@ class OsisoftPiConnector(AbstractConnector):
         return ret
 
     @staticmethod
-    def target_info(host=None):
-        return {"Name": "absolute-fake", "Endpoints": []}
+    def target_info(target_ref=None):
+        return {"Name": target_ref.Name if target_ref else "", "Endpoints": []}
+
+    def __init__(self, conn_name="pi_client", server_name="default", **kwargs):
+        super(OsisoftPiConnector, self).__init__(conn_name)
+        self._server = None
+        self._server_name = server_name
+        self._page_size = (
+            int(kwargs["page_size"])
+            if "page_size" in kwargs
+            else OsisoftPiConnector.DEFAULT_PAGE_SIZE
+        )
 
     @property
     def connected(self):
