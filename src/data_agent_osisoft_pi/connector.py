@@ -535,6 +535,7 @@ class OsisoftPiConnector(AbstractConnector):
             if result_format == "dataframe":
                 df = pd.concat(tag_series, axis=1, sort=True)
                 df.index.name = "timestamp"
+                df.index = pd.to_datetime(df.index)
                 return df
             elif result_format == "series":
                 return tag_series if len(tag_series) > 1 else tag_series[0]
